@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FAQ - PC Assembly Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .faq-section {
+        padding: 40px 0;
+    }
+    .faq-header {
+        background-color: #f8f9fa;
+        padding: 30px 0;
+        margin-bottom: 30px;
+    }
+    .accordion-button:not(.collapsed) {
+        background-color: #e7f1ff;
+        color: #0c63e4;
+    }
+    .category-title {
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .search-box {
+        max-width: 600px;
+        margin: 0 auto 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- FAQ Header -->
+<div class="faq-header">
+    <div class="container">
+        <h1 class="text-center mb-4">Frequently Asked Questions</h1>
+        
+        <!-- Search and Filter Form -->
+        <div class="search-box">
+            <form method="get" class="row g-3">
+                <div class="col-md-8">
+                    {{ filter_form.search }}
+                </div>
+                <div class="col-md-4">
+                    {{ filter_form.category }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="faq-section">
+    <div class="container">
+        {% if faqs_by_category %}
+            {% for category, category_faqs in faqs_by_category.items %}
+                <div class="mb-5">
+                    <h2 class="category-title">{{ category }}</h2>
+                    <div class="accordion" id="accordion-{{ category|slugify }}">
+                        {% for faq in category_faqs %}
+                            <div class="accordion-item">
+                                <h3 class="accordion-header" id="heading-{{ faq.id }}">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" 
+                                            data-bs-target="#collapse-{{ faq.id }}" 
+                                            aria-expanded="false" 
+                                            aria-controls="collapse-{{ faq.id }}">
+                                        {{ faq.question }}
+                                    </button>
+                                </h3>
+                                <div id="collapse-{{ faq.id }}" 
+                                     class="accordion-collapse collapse" 
+                                     aria-labelledby="heading-{{ faq.id }}" 
+                                     data-bs-parent="#accordion-{{ category|slugify }}">
+                                    <div class="accordion-body">
+                                        {{ faq.answer|linebreaks }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                <h4>No FAQs Found</h4>
+                <p class="text-muted">
+                    {% if request.GET %}
+                        No FAQs match your search criteria. Try adjusting your filters.
+                    {% else %}
+                        No FAQs are currently available.
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Contact Section -->
+<div class="bg-light py-5">
+    <div class="container text-center">
+        <h3>Didn't find what you're looking for?</h3>
+        <p class="lead mb-4">Contact our support team for additional help</p>
+        <a href="{% url 'core:contact' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-envelope me-2"></i>Contact Us
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when category changes
+    const categorySelect = document.querySelector('select[name="category"]');
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
+
+    // Handle search input with debounce
+    const searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+        let timeout = null;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                this.form.submit();
+            }, 500);
+        });
+    }
+});
+</script>
+{% endblock %}
