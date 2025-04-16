@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - PC Assembly Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                    url('https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 100px 0;
+    }
+    .feature-card {
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #0d6efd;
+    }
+    .announcement-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-4 mb-4">Professional PC Assembly Service</h1>
+        <p class="lead mb-5">Build your dream computer with our expert assembly service</p>
+        {% if not user.is_authenticated %}
+            <div class="d-grid gap-2 d-md-block">
+                <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg me-md-2">Get Started</a>
+                <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-lg">Login</a>
+            </div>
+        {% else %}
+            <a href="{% url 'customer:request_create' %}" class="btn btn-primary btn-lg">Create New Assembly Request</a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Announcements Section -->
+{% if announcements %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-4">Important Announcements</h2>
+        <div class="row">
+            {% for announcement in announcements %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 position-relative">
+                        <div class="card-body">
+                            <span class="announcement-badge badge bg-{{ announcement.priority }}">
+                                {{ announcement.get_priority_display }}
+                            </span>
+                            <h5 class="card-title">{{ announcement.title }}</h5>
+                            <p class="card-text">{{ announcement.message|truncatewords:30 }}</p>
+                        </div>
+                        <div class="card-footer text-muted">
+                            Posted: {{ announcement.start_date|date:"M d, Y" }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Our Services</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-tools feature-icon"></i>
+                        <h3 class="h4">Expert Assembly</h3>
+                        <p>Professional assembly of your computer components by experienced technicians.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-check-circle feature-icon"></i>
+                        <h3 class="h4">Quality Testing</h3>
+                        <p>Comprehensive testing and quality assurance for every assembled system.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-headset feature-icon"></i>
+                        <h3 class="h4">Support</h3>
+                        <p>Dedicated support throughout the assembly process and after completion.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">How It Works</h2>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h1 mb-3">
+                        <i class="fas fa-user-plus text-primary"></i>
+                    </div>
+                    <h4>1. Register</h4>
+                    <p>Create your account to get started</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h1 mb-3">
+                        <i class="fas fa-list-alt text-primary"></i>
+                    </div>
+                    <h4>2. Submit Request</h4>
+                    <p>Choose your components and submit assembly request</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h1 mb-3">
+                        <i class="fas fa-cogs text-primary"></i>
+                    </div>
+                    <h4>3. Assembly</h4>
+                    <p>Our experts assemble your PC</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h1 mb-3">
+                        <i class="fas fa-check-double text-primary"></i>
+                    </div>
+                    <h4>4. Delivery</h4>
+                    <p>Receive your assembled PC</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="py-5">
+    <div class="container text-center">
+        <h2 class="mb-4">Ready to Build Your Dream PC?</h2>
+        <p class="lead mb-4">Join us today and experience professional PC assembly service</p>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">Get Started Now</a>
+        {% else %}
+            <a href="{% url 'customer:request_create' %}" class="btn btn-primary btn-lg">Create New Assembly Request</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any JavaScript needed for the home page
+</script>
+{% endblock %}
