@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Announcements - PC Assembly Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .announcement-header {
+        background-color: #f8f9fa;
+        padding: 40px 0;
+        margin-bottom: 30px;
+    }
+    .announcement-card {
+        transition: transform 0.3s ease;
+        margin-bottom: 20px;
+    }
+    .announcement-card:hover {
+        transform: translateY(-5px);
+    }
+    .priority-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    .announcement-date {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .priority-high {
+        border-left: 4px solid #dc3545;
+    }
+    .priority-medium {
+        border-left: 4px solid #ffc107;
+    }
+    .priority-low {
+        border-left: 4px solid #0dcaf0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Announcements Header -->
+<div class="announcement-header">
+    <div class="container">
+        <h1 class="text-center">System Announcements</h1>
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+                <!-- Filter Form -->
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        {{ filter_form.priority }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ filter_form.date_from }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ filter_form.date_to }}
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if announcements %}
+        <div class="row">
+            {% for announcement in announcements %}
+                <div class="col-md-6">
+                    <div class="card announcement-card priority-{{ announcement.priority }}">
+                        <div class="card-body">
+                            <span class="badge bg-{{ announcement.priority }} priority-badge">
+                                {{ announcement.get_priority_display }}
+                            </span>
+                            <h3 class="card-title h5">{{ announcement.title }}</h3>
+                            <p class="announcement-date mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Posted: {{ announcement.start_date|date:"M d, Y" }}
+                                {% if announcement.end_date %}
+                                    <span class="ms-2">
+                                        <i class="fas fa-clock me-1"></i>
+                                        Expires: {{ announcement.end_date|date:"M d, Y" }}
+                                    </span>
+                                {% endif %}
+                            </p>
+                            <p class="card-text">{{ announcement.message }}</p>
+                            {% if announcement.created_by %}
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>
+                                    Posted by: {{ announcement.created_by.get_full_name|default:announcement.created_by.username }}
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav aria-label="Announcement pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">
+                                Next
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+            <h4>No Announcements</h4>
+            <p class="text-muted">
+                {% if request.GET %}
+                    No announcements match your search criteria. Try adjusting your filters.
+                {% else %}
+                    There are no active announcements at this time.
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when priority changes
+    const prioritySelect = document.querySelector('select[name="priority"]');
+    if (prioritySelect) {
+        prioritySelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
+
+    // Date range validation
+    const dateFrom = document.querySelector('input[name="date_from"]');
+    const dateTo = document.querySelector('input[name="date_to"]');
+    
+    if (dateFrom && dateTo) {
+        dateFrom.addEventListener('change', function() {
+            dateTo.min = this.value;
+        });
+        
+        dateTo.addEventListener('change', function() {
+            dateFrom.max = this.value;
+        });
+    }
+});
+</script>
+{% endblock %}
