@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Contact Us - PC Assembly Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contact-header {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                    url('https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 60px 0;
+    }
+    .contact-form {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+    }
+    .contact-info-card {
+        transition: transform 0.3s ease;
+    }
+    .contact-info-card:hover {
+        transform: translateY(-5px);
+    }
+    .contact-icon {
+        font-size: 2rem;
+        color: #0d6efd;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Contact Header -->
+<div class="contact-header">
+    <div class="container text-center">
+        <h1 class="display-4">Contact Us</h1>
+        <p class="lead">We're here to help with your PC assembly needs</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Contact Information -->
+        <div class="col-md-4 mb-4 mb-md-0">
+            <div class="card contact-info-card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock contact-icon"></i>
+                    <h3 class="h5">Business Hours</h3>
+                    <p class="mb-0">Monday - Friday: 9:00 AM - 6:00 PM</p>
+                    <p>Saturday: 10:00 AM - 4:00 PM</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4 mb-md-0">
+            <div class="card contact-info-card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-phone contact-icon"></i>
+                    <h3 class="h5">Phone Support</h3>
+                    <p class="mb-0">+1 (555) 123-4567</p>
+                    <p>Available during business hours</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card contact-info-card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-envelope contact-icon"></i>
+                    <h3 class="h5">Email Support</h3>
+                    <p class="mb-0">support@pcassembly.com</p>
+                    <p>We'll respond within 24 hours</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-lg-8 mx-auto">
+            <!-- Contact Form -->
+            <div class="contact-form">
+                <h2 class="text-center mb-4">Send us a Message</h2>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.name|crispy }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.email|crispy }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.subject|crispy }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.message|crispy }}
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-paper-plane me-2"></i>Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <h3>Frequently Asked Questions</h3>
+            <p class="mb-4">Find quick answers to common questions about our services</p>
+            <a href="{% url 'core:faq' %}" class="btn btn-outline-primary">
+                <i class="fas fa-question-circle me-2"></i>View FAQs
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation feedback
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!form.checkValidity()) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    }
+});
+</script>
+{% endblock %}
