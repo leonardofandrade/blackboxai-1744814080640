@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-item {
+        transition: background-color 0.3s ease;
+    }
+    .notification-item:hover {
+        background-color: #f8f9fa;
+    }
+    .notification-unread {
+        background-color: #e7f3ff;
+    }
+    .notification-timestamp {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    .notification-actions {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .notification-item:hover .notification-actions {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Notifications</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if unread_count > 0 %}
+                <form action="{% url 'core:mark_all_notifications_read' %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-check-double"></i> Mark All as Read
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Notification Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    {{ filter_form.status }}
+                </div>
+                <div class="col-md-3">
+                    {{ filter_form.date_from }}
+                </div>
+                <div class="col-md-3">
+                    {{ filter_form.date_to }}
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    {% if notifications %}
+        <div class="list-group">
+            {% for notification in notifications %}
+                <div class="list-group-item notification-item {% if not notification.unread %}notification-unread{% endif %}" 
+                     id="notification-{{ notification.id }}">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">
+                                    {% if notification.unread %}
+                                        <span class="badge bg-primary me-2">New</span>
+                                    {% endif %}
+                                    {{ notification.actor }} {{ notification.verb }} {{ notification.target }}
+                                </h6>
+                                <small class="notification-timestamp">
+                                    {{ notification.timestamp|timesince }} ago
+                                </small>
+                            </div>
+                            <p class="mb-1">{{ notification.description }}</p>
+                            {% if notification.data %}
+                                <small class="text-muted">
+                                    Additional info: {{ notification.data }}
+                                </small>
+                            {% endif %}
+                        </div>
+                        <div class="notification-actions ms-3">
+                            {% if notification.unread %}
+                                <button class="btn btn-sm btn-outline-secondary mark-read-btn" 
+                                        data-notification-id="{{ notification.id }}"
+                                        onclick="markAsRead({{ notification.id }})">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            {% endif %}
+                            {% if notification.action_object_url %}
+                                <a href="{{ notification.action_object_url }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav aria-label="Notification pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+            <h4>No notifications</h4>
+            <p class="text-muted">You don't have any notifications at the moment.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markAsRead(notificationId) {
+    fetch(`/notifications/mark-read/${notificationId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const notification = document.querySelector(`#notification-${notificationId}`);
+            notification.classList.remove('notification-unread');
+            const badge = notification.querySelector('.badge');
+            if (badge) badge.remove();
+            const markReadBtn = notification.querySelector('.mark-read-btn');
+            if (markReadBtn) markReadBtn.remove();
+            
+            // Update unread count in navbar
+            const countBadge = document.querySelector('.notification-badge');
+            if (countBadge) {
+                const currentCount = parseInt(countBadge.textContent);
+                if (currentCount > 1) {
+                    countBadge.textContent = currentCount - 1;
+                } else {
+                    countBadge.remove();
+                }
+            }
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+{% endblock %}
